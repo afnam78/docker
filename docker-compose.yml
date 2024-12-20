@@ -1,0 +1,46 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx_server
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    ports:
+      - 443:443 # Mapea el puerto 443 del contenedor al puerto 443 de tu máquina
+    volumes:
+      - ./src:/var/www/html # Carpeta que contiene los archivos públicos
+    depends_on:
+      - mysql
+      - php
+  mysql:
+    image: mysql
+    container_name: mysql_server
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: laravel
+    ports:
+      - "3306:3306" # Mapea el puerto 3306 del contenedor al puerto 3306 de tu máquina
+    volumes:
+      - ./mysql:/var/lib/mysql # Carpeta que contiene los archivos de la base de datos
+  php:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    volumes:
+      - ./src:/var/www/html # Carpeta que contiene los archivos públicos
+  npm:
+    image: node:current-alpine
+    volumes:
+      - ./src:/var/www/html # Carpeta que contiene los archivos públicos
+    entrypoint: ["npm"]
+    working_dir: /var/www/html
+  artisan:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    volumes:
+      - ./src:/var/www/html # Carpeta que contiene los archivos públicos
+    working_dir: /var/www/html
+    depends_on:
+      - mysql
+    entrypoint: ["php", "/var/www/html/artisan"]
